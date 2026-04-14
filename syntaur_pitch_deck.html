@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syntaur LLC — Investment Pitch</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0d1b2a;
+  --navy2: #152338;
+  --navy3: #1e3352;
+  --gold: #c9922a;
+  --gold-light: #e8b84b;
+  --cream: #f5f0e8;
+  --cream2: #ede5d4;
+  --white: #ffffff;
+  --muted: rgba(245,240,232,0.55);
+  --accent: #4a9eda;
+  --green: #3ab07a;
+  --red: #e05a4e;
+  --amber: #d4852a;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--navy); }
+body { font-family: 'DM Sans', sans-serif; color: var(--cream); }
+
+/* ── Deck shell ── */
+#deck { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: 52px 64px 40px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+/* ── Nav ── */
+#nav {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 10px; align-items: center; z-index: 100;
+  background: rgba(13,27,42,0.85); backdrop-filter: blur(8px);
+  padding: 10px 18px; border-radius: 40px;
+  border: 1px solid rgba(201,146,42,0.3);
+}
+#nav button {
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 4px 10px;
+  border-radius: 20px; transition: all 0.2s;
+}
+#nav button:hover { color: var(--cream); }
+#nav button.prev, #nav button.next {
+  color: var(--gold); font-size: 16px; font-weight: 500;
+}
+#nav .dots { display: flex; gap: 6px; align-items: center; }
+.dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(201,146,42,0.3); cursor: pointer; transition: all 0.2s;
+}
+.dot.active { background: var(--gold); transform: scale(1.3); }
+#slide-count { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; min-width: 36px; text-align: center; }
+
+/* ── Typography ── */
+.display { font-family: 'Playfair Display', serif; }
+h1.display { font-size: clamp(38px,4.5vw,64px); font-weight: 900; line-height: 1.05; }
+h2.display { font-size: clamp(28px,3vw,44px); font-weight: 700; line-height: 1.1; }
+.eyebrow {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 14px; font-family: 'DM Mono', monospace;
+}
+.body { font-size: 15px; line-height: 1.7; color: var(--muted); font-weight: 300; }
+.body strong { color: var(--cream); font-weight: 500; }
+
+/* ── Slide backgrounds ── */
+.bg-cover { background: var(--navy); }
+.bg-grid {
+  background: var(--navy);
+  background-image:
+    linear-gradient(rgba(201,146,42,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,146,42,0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.bg-dark { background: #080f18; }
+.bg-mid { background: var(--navy2); }
+
+/* ── Decorative line ── */
+.gold-rule { width: 48px; height: 3px; background: var(--gold); margin-bottom: 22px; border-radius: 2px; }
+
+/* ── Stat cards ── */
+.stat-grid { display: grid; gap: 14px; }
+.sg-4 { grid-template-columns: repeat(4,1fr); }
+.sg-3 { grid-template-columns: repeat(3,1fr); }
+.sg-2 { grid-template-columns: repeat(2,1fr); }
+.stat-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(201,146,42,0.18);
+  border-radius: 10px; padding: 18px 20px;
+}
+.stat-card .label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+.stat-card .value { font-size: clamp(22px,2.5vw,34px); font-weight: 700; font-family: 'Playfair Display', serif; color: var(--cream); }
+.stat-card .sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.stat-card.gold { border-color: rgba(201,146,42,0.5); background: rgba(201,146,42,0.07); }
+.stat-card.green { border-color: rgba(58,176,122,0.4); background: rgba(58,176,122,0.06); }
+.stat-card.red-card { border-color: rgba(224,90,78,0.4); background: rgba(224,90,78,0.06); }
+.stat-card.accent { border-color: rgba(74,158,218,0.4); background: rgba(74,158,218,0.06); }
+
+/* ── Two-col ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; flex: 1; align-items: center; }
+.two-col-40 { display: grid; grid-template-columns: 2fr 3fr; gap: 40px; flex: 1; align-items: start; }
+
+/* ── Chart wrappers ── */
+.chart-box {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 20px;
+}
+.chart-title { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; font-family: 'DM Mono', monospace; }
+
+/* ── Table ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; font-family: 'DM Mono', monospace; }
+.data-table td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(201,146,42,0.05); }
+
+/* ── Pill badges ── */
+.pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.pill-gold { background: rgba(201,146,42,0.2); color: var(--gold-light); border: 1px solid rgba(201,146,42,0.3); }
+.pill-green { background: rgba(58,176,122,0.15); color: #6dd9a8; border: 1px solid rgba(58,176,122,0.3); }
+.pill-red { background: rgba(224,90,78,0.15); color: #f08070; border: 1px solid rgba(224,90,78,0.3); }
+.pill-blue { background: rgba(74,158,218,0.15); color: #7fc4f0; border: 1px solid rgba(74,158,218,0.3); }
+
+/* ── Proof item ── */
+.proof-item {
+  background: rgba(58,176,122,0.07); border: 1px solid rgba(58,176,122,0.25);
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 12px;
+}
+.proof-item .pi-label { font-size: 12px; color: var(--green); letter-spacing: 0.04em; margin-bottom: 4px; font-family: 'DM Mono', monospace; }
+.proof-item .pi-title { font-size: 15px; font-weight: 500; color: var(--cream); margin-bottom: 6px; }
+.proof-item .pi-row { display: flex; gap: 20px; }
+.proof-item .pi-stat { text-align: center; }
+.proof-item .pi-stat .ps-val { font-size: 20px; font-weight: 700; font-family: 'Playfair Display', serif; color: var(--green); }
+.proof-item .pi-stat .ps-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ── Waitlist item ── */
+.wl-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 7px;
+}
+.wl-item .wl-name { font-size: 13px; color: var(--cream); flex: 1; margin-right: 12px; }
+.wl-item .wl-waiting { font-size: 13px; font-weight: 500; color: var(--gold-light); min-width: 36px; text-align: right; font-family: 'DM Mono', monospace; }
+.wl-item .wl-rev { font-size: 13px; font-weight: 500; color: var(--accent); min-width: 72px; text-align: right; font-family: 'DM Mono', monospace; }
+.wl-bar { height: 4px; background: rgba(201,146,42,0.15); border-radius: 2px; margin-top: 3px; }
+.wl-bar-fill { height: 4px; background: var(--gold); border-radius: 2px; }
+
+/* ── Opportunity row ── */
+.opp-row {
+  display: flex; gap: 16px; align-items: stretch;
+  margin-bottom: 12px;
+}
+.opp-col { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; }
+.opp-col.highlight { border-color: rgba(201,146,42,0.35); background: rgba(201,146,42,0.06); }
+.opp-col .oc-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; font-family: 'DM Mono', monospace; }
+.opp-col .oc-val { font-size: 18px; font-weight: 700; font-family: 'Playfair Display', serif; }
+.opp-col .oc-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* ── Slide 1: Title ── */
+#s1 { justify-content: center; }
+#s1 .tagline { font-size: 18px; color: var(--muted); font-weight: 300; margin-top: 18px; max-width: 560px; line-height: 1.5; }
+#s1 .meta-row { display: flex; gap: 32px; margin-top: 36px; }
+#s1 .meta-item .m-val { font-size: 28px; font-weight: 700; font-family: 'Playfair Display', serif; color: var(--gold-light); }
+#s1 .meta-item .m-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-family: 'DM Mono', monospace; margin-top: 2px; }
+.gold-border-left { border-left: 3px solid var(--gold); padding-left: 20px; }
+#s1 .corner-deco {
+  position: absolute; top: 40px; right: 60px;
+  font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(201,146,42,0.4);
+  text-align: right; line-height: 1.8;
+}
+
+/* ── Slide header ── */
+.slide-header { margin-bottom: 28px; }
+.slide-num { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(201,146,42,0.4); margin-bottom: 10px; }
+
+/* ── Arrow motif ── */
+.arrow-right { color: var(--gold); margin: 0 8px; }
+
+/* ── Ask slide ── */
+.ask-item {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start;
+  margin-bottom: 12px;
+}
+.ask-item.primary { border-color: rgba(201,146,42,0.4); background: rgba(201,146,42,0.07); }
+.ask-num { font-size: 28px; font-weight: 900; font-family: 'Playfair Display', serif; color: rgba(201,146,42,0.35); line-height: 1; min-width: 32px; }
+.ask-title { font-size: 15px; font-weight: 500; color: var(--cream); margin-bottom: 4px; }
+.ask-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.ask-cost { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--gold-light); margin-top: 6px; }
+
+/* ── Closing slide ── */
+#s8 { justify-content: center; align-items: center; text-align: center; }
+#s8 .closing-sub { font-size: 16px; color: var(--muted); margin-top: 16px; max-width: 500px; line-height: 1.7; }
+.highlight-box {
+  margin-top: 40px; background: rgba(201,146,42,0.08); border: 1px solid rgba(201,146,42,0.3);
+  border-radius: 12px; padding: 24px 36px; max-width: 600px;
+}
+.highlight-box .hb-val { font-size: 42px; font-weight: 900; font-family: 'Playfair Display', serif; color: var(--gold-light); }
+.highlight-box .hb-lbl { font-size: 13px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+<!-- ═══════════════════════════════════════ SLIDE 1: Title ═══ -->
+<div class="slide bg-grid active" id="s1">
+  <div class="corner-deco">
+    SYNTAUR LLC<br>
+    INVESTMENT BRIEF<br>
+    2026
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:700px">
+    <div class="eyebrow">Investment Opportunity</div>
+    <h1 class="display">The Case for<br>Manufacturing<span style="color:var(--gold)">.</span></h1>
+    <p class="tagline">Syntaur holds a near-monopoly on vintage synthesizer parts. The next phase of growth isn't more sales — it's owning the supply chain.</p>
+    <div class="meta-row">
+      <div class="meta-item gold-border-left">
+        <div class="m-val">$1.37M</div>
+        <div class="m-lbl">2025 Revenue</div>
+      </div>
+      <div class="meta-item gold-border-left">
+        <div class="m-val">3,800+</div>
+        <div class="m-lbl">SKUs in demand</div>
+      </div>
+      <div class="meta-item gold-border-left">
+        <div class="m-val">31,020</div>
+        <div class="m-lbl">Customers waiting</div>
+      </div>
+      <div class="meta-item gold-border-left">
+        <div class="m-val">$2.2M</div>
+        <div class="m-lbl">Locked revenue</div>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:80px;right:64px;width:340px">
+    <div class="chart-box" style="padding:16px">
+      <div class="chart-title">Net margin trajectory</div>
+      <div style="position:relative;height:130px"><canvas id="c1" role="img" aria-label="Bar chart showing net margin 2024 through 2026"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 2: Business ═══ -->
+<div class="slide bg-dark" id="s2">
+  <div class="slide-header">
+    <div class="slide-num">01 / Business Performance</div>
+    <div class="gold-rule"></div>
+    <h2 class="display">Strong fundamentals.<br>Strategic reinvestment.</h2>
+  </div>
+  <div class="stat-grid sg-4" style="margin-bottom:24px">
+    <div class="stat-card">
+      <div class="label">2024 Revenue</div>
+      <div class="value">$1.20M</div>
+      <div class="sub">23.5% net margin</div>
+    </div>
+    <div class="stat-card red-card">
+      <div class="label">2025 Revenue</div>
+      <div class="value">$1.37M</div>
+      <div class="sub">↑ 13.5% — margin compressed by design</div>
+    </div>
+    <div class="stat-card green">
+      <div class="label">2026 Jan–Feb avg × 12</div>
+      <div class="value">~$1.6M</div>
+      <div class="sub">19.5% margin, recovering fast</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="label">2026 est. net profit</div>
+      <div class="value">~$318K</div>
+      <div class="sub">Above 2024 — and trending up</div>
+    </div>
+  </div>
+  <div class="two-col" style="flex:1;gap:32px">
+    <div>
+      <div class="chart-box" style="height:100%">
+        <div class="chart-title">Revenue & profit — 2024 → 2026 est.</div>
+        <div style="position:relative;height:200px"><canvas id="c2" role="img" aria-label="Grouped bar chart revenue and profit by year"></canvas></div>
+      </div>
+    </div>
+    <div>
+      <p class="body" style="margin-bottom:16px">The 2025 margin dip was intentional — not a warning sign. Three structural moves happened at once:</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:rgba(255,255,255,0.03);border-left:3px solid var(--gold);padding:12px 16px;border-radius:0 8px 8px 0">
+          <div style="font-size:13px;font-weight:500;color:var(--cream);margin-bottom:3px">Rent started: +$108K/yr</div>
+          <div style="font-size:12px;color:var(--muted)">LLC restructuring — tax-advantaged, not a cash drain</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border-left:3px solid var(--gold);padding:12px 16px;border-radius:0 8px 8px 0">
+          <div style="font-size:13px;font-weight:500;color:var(--cream);margin-bottom:3px">Payroll raised: +$65K/yr</div>
+          <div style="font-size:12px;color:var(--muted)">Retention investment in a specialist team</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border-left:3px solid var(--gold);padding:12px 16px;border-radius:0 8px 8px 0">
+          <div style="font-size:13px;font-weight:500;color:var(--cream);margin-bottom:3px">Inventory expanded: +$125K</div>
+          <div style="font-size:12px;color:var(--muted)">Including tooling for first remanufactured parts — the thesis begins here</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 3: Proof of Concept ═══ -->
+<div class="slide bg-grid" id="s3">
+  <div class="slide-header">
+    <div class="slide-num">02 / The Model Works</div>
+    <div class="gold-rule"></div>
+    <h2 class="display">We already do this.<br><span style="color:var(--gold)">It prints money.</span></h2>
+  </div>
+  <div class="two-col-40" style="flex:1">
+    <div>
+      <p class="body" style="margin-bottom:20px">Syntaur has proven the in-house manufacturing model with real, live products. These aren't projections — they're 2025 actuals.</p>
+
+      <div class="proof-item">
+        <div class="pi-label">✓ Live — Roland Hammer Weights</div>
+        <div class="pi-title">Hammer weight, white/black key, Roland</div>
+        <div class="pi-row">
+          <div class="pi-stat"><div class="ps-val">$3.20</div><div class="ps-lbl">Our cost</div></div>
+          <div class="pi-stat" style="color:var(--muted);font-size:20px;align-self:center">→</div>
+          <div class="pi-stat"><div class="ps-val">$16.95</div><div class="ps-lbl">Sale price</div></div>
+          <div class="pi-stat" style="border-left:1px solid rgba(255,255,255,0.1);padding-left:16px;margin-left:4px"><div class="ps-val">81%</div><div class="ps-lbl">Margin</div></div>
+          <div class="pi-stat"><div class="ps-val">1,304</div><div class="ps-lbl">Sold/yr</div></div>
+        </div>
+      </div>
+
+      <div class="proof-item">
+        <div class="pi-label">✓ Live — Contact Strip #4156</div>
+        <div class="pi-title">Contact strip, 12-note (Tada Membrane Switch)</div>
+        <div class="pi-row">
+          <div class="pi-stat"><div class="ps-val">$0.98</div><div class="ps-lbl">Our cost</div></div>
+          <div class="pi-stat" style="color:var(--muted);font-size:20px;align-self:center">→</div>
+          <div class="pi-stat"><div class="ps-val">$12.95</div><div class="ps-lbl">Sale price</div></div>
+          <div class="pi-stat" style="border-left:1px solid rgba(255,255,255,0.1);padding-left:16px;margin-left:4px"><div class="ps-val">92%</div><div class="ps-lbl">Margin</div></div>
+          <div class="pi-stat"><div class="ps-val">959</div><div class="ps-lbl">Sold/yr</div></div>
+        </div>
+      </div>
+
+      <div style="background:rgba(201,146,42,0.07);border:1px solid rgba(201,146,42,0.25);border-radius:8px;padding:12px 16px;margin-top:4px">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:.05em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:4px">Key insight</div>
+        <div style="font-size:13px;color:var(--cream);line-height:1.6">Roland no longer makes these. Syntaur does. 11 in-house SKUs averaging <strong style="color:var(--gold-light)">75% margin</strong> — vs. 45–65% for sourced equivalents.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="chart-box">
+        <div class="chart-title">In-house vs. external margin — current top sellers</div>
+        <div style="position:relative;height:310px"><canvas id="c3" role="img" aria-label="Bar chart comparing margins for in-house versus externally sourced items"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 4: The Gap ═══ -->
+<div class="slide bg-mid" id="s4">
+  <div class="slide-header">
+    <div class="slide-num">03 / The Opportunity Gap</div>
+    <div class="gold-rule"></div>
+    <h2 class="display">High volume.<br>Low margin.<br><span style="color:var(--gold)">Fixable.</span></h2>
+  </div>
+  <div class="two-col" style="flex:1;gap:32px;align-items:start">
+    <div>
+      <p class="body" style="margin-bottom:16px">These are top-selling items where we're currently leaving significant margin behind. All are sourced externally — meaning someone else pockets the manufacturing margin on every unit.</p>
+
+      <table class="data-table">
+        <thead><tr>
+          <th>Item</th><th>Supplier</th><th>Qty/yr</th><th>Margin</th><th>Upside</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Hammer cap, Casio white key</td><td style="color:var(--muted)">Casio</td><td style="font-family:'DM Mono',monospace;text-align:right">940</td><td><span class="pill pill-red">32%</span></td><td style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px">+$8.2K</td></tr>
+          <tr><td>Hammer cap, Casio black key</td><td style="color:var(--muted)">Casio</td><td style="font-family:'DM Mono',monospace;text-align:right">406</td><td><span class="pill pill-red">32%</span></td><td style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px">+$3.5K</td></tr>
+          <tr><td>Contact strip, 12-note</td><td style="color:var(--muted)">Am. Music</td><td style="font-family:'DM Mono',monospace;text-align:right">587</td><td><span class="pill pill-red">17%</span></td><td style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px">+$9.7K</td></tr>
+          <tr><td>Keybed cushion, 88-note</td><td style="color:var(--muted)">Yamaha</td><td style="font-family:'DM Mono',monospace;text-align:right">192</td><td><span class="pill pill-red">58%</span></td><td style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px">+$4.7K</td></tr>
+          <tr><td>Joystick, Korg</td><td style="color:var(--muted)">Korg</td><td style="font-family:'DM Mono',monospace;text-align:right">193</td><td><span class="pill pill-red">57%</span></td><td style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px">+$4.1K</td></tr>
+          <tr><td>Key return flat spring</td><td style="color:var(--muted)">Korg</td><td style="font-family:'DM Mono',monospace;text-align:right">117</td><td><span class="pill pill-red">49%</span></td><td style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px">+$2.8K</td></tr>
+          <tr><td>Power cord, 2-blade</td><td style="color:var(--muted)">Hosa</td><td style="font-family:'DM Mono',monospace;text-align:right">193</td><td><span class="pill pill-red">48%</span></td><td style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px">+$3.2K</td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:14px;padding:12px 14px;background:rgba(224,90,78,0.08);border:1px solid rgba(224,90,78,0.25);border-radius:8px;font-size:12px;color:var(--muted)">
+        If only the top 30 externally sourced items were converted to <strong style="color:var(--cream)">82% in-house margin</strong>, the annual profit uplift at current volume is approximately <strong style="color:var(--gold-light)">$105,000/yr — without growing sales at all.</strong>
+      </div>
+    </div>
+
+    <div>
+      <div class="chart-box" style="height:100%">
+        <div class="chart-title">Margin distribution — all suppliers vs. Syntaur in-house</div>
+        <div style="position:relative;height:280px"><canvas id="c4" role="img" aria-label="Scatter plot showing margin distribution across suppliers"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 5: Waitlist ═══ -->
+<div class="slide bg-dark" id="s5">
+  <div class="slide-header">
+    <div class="slide-num">04 / Captured Demand</div>
+    <div class="gold-rule"></div>
+    <h2 class="display">$2.2M sitting in a<br>waitlist. <span style="color:var(--gold)">No ads required.</span></h2>
+  </div>
+  <div class="two-col" style="flex:1;gap:40px;align-items:start">
+    <div>
+      <div class="stat-grid sg-2" style="margin-bottom:18px">
+        <div class="stat-card gold"><div class="label">Locked revenue</div><div class="value">$2.21M</div><div class="sub">31,020 customers waiting</div></div>
+        <div class="stat-card accent"><div class="label">Top 50 items alone</div><div class="value">$355K</div><div class="sub">Concentrated, predictable demand</div></div>
+      </div>
+
+      <div class="wl-item">
+        <div>
+          <div class="wl-name">Music rest, Yamaha</div>
+          <div class="wl-bar" style="width:160px"><div class="wl-bar-fill" style="width:100%"></div></div>
+        </div>
+        <div class="wl-waiting">297</div>
+        <div class="wl-rev">$9.5K</div>
+        <span class="pill pill-green" style="margin-left:10px">3D print</span>
+      </div>
+      <div class="wl-item">
+        <div>
+          <div class="wl-name">Button assembly, right, Korg Triton LE</div>
+          <div class="wl-bar" style="width:160px"><div class="wl-bar-fill" style="width:82%"></div></div>
+        </div>
+        <div class="wl-waiting">245</div>
+        <div class="wl-rev">$6.8K</div>
+        <span class="pill pill-green" style="margin-left:10px">3D print</span>
+      </div>
+      <div class="wl-item">
+        <div>
+          <div class="wl-name">Display screen, Roland</div>
+          <div class="wl-bar" style="width:160px"><div class="wl-bar-fill" style="width:76%" style="background:var(--accent)"></div></div>
+        </div>
+        <div class="wl-waiting">227</div>
+        <div class="wl-rev">$34K</div>
+        <span class="pill pill-blue" style="margin-left:10px">source</span>
+      </div>
+      <div class="wl-item">
+        <div>
+          <div class="wl-name">Pushbutton switch, black (×220 waiting)</div>
+          <div class="wl-bar" style="width:160px"><div class="wl-bar-fill" style="width:74%"></div></div>
+        </div>
+        <div class="wl-waiting">220</div>
+        <div class="wl-rev">$2.2K</div>
+        <span class="pill pill-green" style="margin-left:10px">3D print</span>
+      </div>
+      <div class="wl-item">
+        <div>
+          <div class="wl-name">Power/amp board, Yamaha</div>
+          <div class="wl-bar" style="width:160px"><div class="wl-bar-fill" style="width:49%" style="background:var(--accent)"></div></div>
+        </div>
+        <div class="wl-waiting">147</div>
+        <div class="wl-rev">$11.8K</div>
+        <span class="pill pill-blue" style="margin-left:10px">source</span>
+      </div>
+      <div class="wl-item">
+        <div>
+          <div class="wl-name">Front panel, Roland Juno-106</div>
+          <div class="wl-bar" style="width:160px"><div class="wl-bar-fill" style="width:35%"></div></div>
+        </div>
+        <div class="wl-waiting">105</div>
+        <div class="wl-rev">$6.3K</div>
+        <span class="pill pill-green" style="margin-left:10px">3D print</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="chart-box" style="margin-bottom:16px">
+        <div class="chart-title">Locked revenue by category — $2.21M total</div>
+        <div style="position:relative;height:230px"><canvas id="c5" role="img" aria-label="Donut chart of locked waitlist revenue by part category"></canvas></div>
+      </div>
+      <div style="background:rgba(201,146,42,0.07);border:1px solid rgba(201,146,42,0.25);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.6">
+        <strong style="color:var(--gold-light)">These customers aren't browsing.</strong> They opted in to restock alerts. Conversion is near-guaranteed the moment supply exists. This is the definition of zero-CAC demand.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 6: 3D Print Strategy ═══ -->
+<div class="slide bg-grid" id="s6">
+  <div class="slide-header">
+    <div class="slide-num">05 / The Strategy</div>
+    <div class="gold-rule"></div>
+    <h2 class="display">Two vectors.<br><span style="color:var(--gold)">One flywheel.</span></h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;flex:1;align-content:start">
+
+    <div style="grid-column:1/2">
+      <div style="background:rgba(58,176,122,0.08);border:1px solid rgba(58,176,122,0.3);border-radius:12px;padding:18px 20px;height:100%">
+        <div style="font-size:11px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:10px">Vector A — Margin Repair</div>
+        <div style="font-size:16px;font-weight:500;color:var(--cream);margin-bottom:12px">Convert low-margin sellers</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">We already sell these. We buy them from suppliers at thin margins. Manufacturing in-house with 3D printing flips the economics without touching revenue.</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--green)">▸</span> Casio hammer caps — 1,346 units/yr at 32%</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--green)">▸</span> Korg joystick — 193 units/yr at 57%</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--green)">▸</span> Key springs — 117+ units/yr at 49%</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--green)">▸</span> Music rests (Yamaha, Alesis) — 457 waiting</div>
+        </div>
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(58,176,122,0.1);border-radius:6px;font-size:13px">
+          Target: <strong style="color:var(--green)">+$105K/yr</strong> profit on flat revenue
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-column:2/3">
+      <div style="background:rgba(74,158,218,0.07);border:1px solid rgba(74,158,218,0.3);border-radius:12px;padding:18px 20px;height:100%">
+        <div style="font-size:11px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:10px">Vector B — Unlock the Waitlist</div>
+        <div style="font-size:16px;font-weight:500;color:var(--cream);margin-bottom:12px">Create supply for captured demand</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">3,811 out-of-stock items with signed-up buyers. Many are physical parts — panels, buttons, cases, mechanical parts — that OEM suppliers will never restock. We can.</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--accent)">▸</span> Roland Juno-106 front panel — 105 waiting</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--accent)">▸</span> Korg Triton button assemblies — 386 waiting</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--accent)">▸</span> End caps, Yamaha — 173 waiting</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--accent)">▸</span> Moog pitch bend/mod wheel — 97 waiting</div>
+        </div>
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(74,158,218,0.1);border-radius:6px;font-size:13px">
+          Target: unlock <strong style="color:var(--accent)">$200K+</strong> from reman-eligible waitlist items
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-column:3/4">
+      <div style="background:rgba(201,146,42,0.07);border:1px solid rgba(201,146,42,0.3);border-radius:12px;padding:18px 20px;height:100%">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:10px">The Moat</div>
+        <div style="font-size:16px;font-weight:500;color:var(--cream);margin-bottom:12px">Why no one else will</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">Syntaur's dominant market position and 3,000+ model catalog means we already know which parts sell. No one else has this data. No one else has the customer relationships.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--gold)">▸</span> Wish-list data signals viable SKUs in advance</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--gold)">▸</span> Near-monopoly = pricing power</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--gold)">▸</span> In-house technical expertise to reverse-engineer parts</div>
+          <div style="font-size:12px;color:var(--cream);display:flex;align-items:center;gap:8px"><span style="color:var(--gold)">▸</span> Once tooling is paid off: near-100% margin forever</div>
+        </div>
+        <div style="margin-top:auto;padding:10px 12px;background:rgba(201,146,42,0.1);border-radius:6px;font-size:13px">
+          <strong style="color:var(--gold-light)">Compounding advantage:</strong> every new SKU we manufacture widens the gap
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 7: Projection ═══ -->
+<div class="slide bg-mid" id="s7">
+  <div class="slide-header">
+    <div class="slide-num">06 / Financial Projection</div>
+    <div class="gold-rule"></div>
+    <h2 class="display">Same revenue.<br><span style="color:var(--gold)">Double the profit.</span></h2>
+  </div>
+  <div class="two-col" style="flex:1;gap:40px;align-items:start">
+    <div>
+      <p class="body" style="margin-bottom:20px">The pitch isn't "grow faster." It's "keep the same customers, fulfill more of them, and pocket the margin that currently goes to OEM suppliers."</p>
+
+      <table class="data-table" style="margin-bottom:18px">
+        <thead><tr><th>Scenario</th><th>Blended Margin</th><th>Est. Net Profit</th></tr></thead>
+        <tbody>
+          <tr><td>2025 actual (reinvestment year)</td><td><span class="pill pill-red">7.2%</span></td><td style="font-family:'DM Mono',monospace">$97,857</td></tr>
+          <tr><td>2026 baseline (Jan–Feb pace)</td><td><span class="pill pill-blue">19.9%</span></td><td style="font-family:'DM Mono',monospace">~$318,000</td></tr>
+          <tr style="background:rgba(58,176,122,0.06)"><td><strong>+ Conservative reman (20 new SKUs)</strong></td><td><span class="pill pill-green">~24%</span></td><td style="font-family:'DM Mono',monospace;color:var(--green)">~$384,000</td></tr>
+          <tr style="background:rgba(58,176,122,0.1)"><td><strong>+ Moderate reman (50 new SKUs)</strong></td><td><span class="pill pill-green">~30%</span></td><td style="font-family:'DM Mono',monospace;color:var(--green)">~$480,000</td></tr>
+          <tr style="background:rgba(201,146,42,0.1)"><td><strong style="color:var(--gold-light)">+ Aggressive (majority in-house)</strong></td><td><span class="pill pill-gold">~38%</span></td><td style="font-family:'DM Mono',monospace;color:var(--gold-light)">~$608,000</td></tr>
+        </tbody>
+      </table>
+
+      <div style="background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.25);border-radius:8px;padding:14px 16px">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:.05em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:6px">Core insight</div>
+        <div style="font-size:13px;color:var(--cream);line-height:1.6">Converting <strong>$200K of externally sourced COGS</strong> to 82% in-house margin generates <strong style="color:var(--gold-light)">~$74K additional profit/year with zero revenue growth.</strong> The investment pays for itself in under 18 months.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="chart-box">
+        <div class="chart-title">Profit trajectory by scenario — $1.6M revenue assumed flat</div>
+        <div style="position:relative;height:310px"><canvas id="c7" role="img" aria-label="Bar chart showing net profit under different remanufacturing scenarios"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 8: The Ask ═══ -->
+<div class="slide bg-dark" id="s8">
+  <div class="slide-header" style="margin-bottom:20px">
+    <div class="slide-num">07 / The Ask</div>
+    <div class="gold-rule"></div>
+    <h2 class="display">A focused investment<br>in a proven machine.</h2>
+  </div>
+  <div class="two-col" style="flex:1;gap:40px;align-items:start">
+    <div>
+      <div class="ask-item primary">
+        <div class="ask-num">1</div>
+        <div>
+          <div class="ask-title">3D Printing & Tooling Equipment</div>
+          <div class="ask-body">SLA/resin printers for precision small parts — buttons, springs, keys, panels, housings. Direct path to 80%+ margins on mechanical parts currently sourced externally.</div>
+          <div class="ask-cost">$15,000 – $30,000 one-time capital</div>
+        </div>
+      </div>
+      <div class="ask-item">
+        <div class="ask-num">2</div>
+        <div>
+          <div class="ask-title">Dedicated R&D / Manufacturing Role</div>
+          <div class="ask-body">One person whose sole job is to systematically identify printable/manufacturable items using sales data and wish-list signals, then develop and validate them.</div>
+          <div class="ask-cost">$45,000 – $60,000/yr operational</div>
+        </div>
+      </div>
+      <div class="ask-item">
+        <div class="ask-num">3</div>
+        <div>
+          <div class="ask-title">Year 1 Tooling & Materials</div>
+          <div class="ask-body">First-run materials and tooling costs for 20–30 new manufactured SKUs. After first run, recurring cost drops to materials only.</div>
+          <div class="ask-cost">$20,000 – $40,000 (partially one-time)</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="stat-grid sg-2" style="margin-bottom:18px">
+        <div class="stat-card gold">
+          <div class="label">Total investment</div>
+          <div class="value">~$120K</div>
+          <div class="sub">Year 1 all-in</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">Est. annual return</div>
+          <div class="value">$150–$200K</div>
+          <div class="sub">From margin improvement alone</div>
+        </div>
+      </div>
+      <div style="background:rgba(58,176,122,0.07);border:1px solid rgba(58,176,122,0.25);border-radius:10px;padding:18px 20px">
+        <div style="font-size:11px;color:var(--green);letter-spacing:.07em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:12px">Why now</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:13px;color:var(--muted);display:flex;gap:10px"><span style="color:var(--green)">✓</span><span>The model is <strong style="color:var(--cream)">already proven</strong> — 11 live SKUs, 75% avg margin</span></div>
+          <div style="font-size:13px;color:var(--muted);display:flex;gap:10px"><span style="color:var(--green)">✓</span><span><strong style="color:var(--cream)">31,020 customers</strong> are already waiting — no demand risk</span></div>
+          <div style="font-size:13px;color:var(--muted);display:flex;gap:10px"><span style="color:var(--green)">✓</span><span>Syntaur's <strong style="color:var(--cream)">dominant market position</strong> means every new part has a built-in customer base</span></div>
+          <div style="font-size:13px;color:var(--muted);display:flex;gap:10px"><span style="color:var(--green)">✓</span><span>2026 margins are <strong style="color:var(--cream)">already recovering</strong> — investment accelerates what's already working</span></div>
+          <div style="font-size:13px;color:var(--muted);display:flex;gap:10px"><span style="color:var(--green)">✓</span><span>Payback estimated in <strong style="color:var(--cream)">under 18 months</strong></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 9: Close ═══ -->
+<div class="slide bg-grid" id="s9" style="justify-content:center;align-items:center;text-align:center">
+  <div class="eyebrow" style="text-align:center">Syntaur LLC</div>
+  <h1 class="display" style="max-width:700px;margin:0 auto">The rarest parts<br>in music. <span style="color:var(--gold)">Made by us.</span></h1>
+  <p style="font-size:16px;color:var(--muted);margin-top:18px;max-width:520px;line-height:1.7">Syntaur already has the catalog, the customers, the expertise, and the proof of concept. This investment makes the supply chain match the demand signal.</p>
+
+  <div style="display:flex;gap:24px;margin-top:40px;justify-content:center">
+    <div style="background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.3);border-radius:12px;padding:24px 32px;text-align:center">
+      <div style="font-size:38px;font-weight:900;font-family:'Playfair Display',serif;color:var(--gold-light)">$2.2M</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">locked demand waiting</div>
+    </div>
+    <div style="background:rgba(58,176,122,0.07);border:1px solid rgba(58,176,122,0.3);border-radius:12px;padding:24px 32px;text-align:center">
+      <div style="font-size:38px;font-weight:900;font-family:'Playfair Display',serif;color:#6dd9a8">92%</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">proven in-house margin ceiling</div>
+    </div>
+    <div style="background:rgba(74,158,218,0.07);border:1px solid rgba(74,158,218,0.3);border-radius:12px;padding:24px 32px;text-align:center">
+      <div style="font-size:38px;font-weight:900;font-family:'Playfair Display',serif;color:#7fc4f0">&lt;18mo</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">estimated payback period</div>
+    </div>
+  </div>
+
+  <div style="margin-top:36px;font-size:13px;color:rgba(245,240,232,0.3);font-family:'DM Mono',monospace">syntaur.com · All data from 2025 actuals and Jan–Feb 2026 P&L</div>
+</div>
+
+</div><!-- end #deck -->
+
+<!-- Nav -->
+<div id="nav">
+  <button class="prev" onclick="go(-1)">‹</button>
+  <div class="dots" id="dots"></div>
+  <span id="slide-count">1 / 9</span>
+  <button class="next" onclick="go(1)">›</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const dotsEl = document.getElementById('dots');
+const countEl = document.getElementById('slide-count');
+let cur = 0;
+const total = slides.length;
+
+slides.forEach((_,i) => {
+  const d = document.createElement('span');
+  d.className = 'dot' + (i===0?' active':'');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function goTo(n) {
+  slides[cur].classList.remove('active');
+  document.querySelectorAll('.dot')[cur].classList.remove('active');
+  cur = (n + total) % total;
+  slides[cur].classList.add('active');
+  document.querySelectorAll('.dot')[cur].classList.add('active');
+  countEl.textContent = (cur+1) + ' / ' + total;
+}
+function go(d) { goTo(cur + d); }
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') go(1);
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp') go(-1);
+});
+
+// ── Chart defaults ──
+Chart.defaults.color = 'rgba(245,240,232,0.5)';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+// ── C1: Margin sparkline (title slide) ──
+new Chart(document.getElementById('c1').getContext('2d'), {
+  type:'bar',
+  data:{
+    labels:['2024','2025','2026 est.'],
+    datasets:[{
+      data:[23.5,7.2,19.9],
+      backgroundColor:['rgba(201,146,42,0.6)','rgba(224,90,78,0.6)','rgba(58,176,122,0.7)'],
+      borderColor:['#c9922a','#e05a4e','#3ab07a'],
+      borderWidth:1, borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Net margin: '+c.parsed.y+'%'}}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:'rgba(245,240,232,0.5)'}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>v+'%',color:'rgba(245,240,232,0.5)'}}
+    }
+  }
+});
+
+// ── C2: Revenue & profit ──
+new Chart(document.getElementById('c2').getContext('2d'), {
+  type:'bar',
+  data:{
+    labels:['2024','2025','2026 est.'],
+    datasets:[
+      {label:'Revenue',data:[1203711,1365769,1600000],backgroundColor:'rgba(201,146,42,0.35)',borderColor:'#c9922a',borderWidth:1,borderRadius:3},
+      {label:'Net Profit',data:[283317,97857,318000],backgroundColor:'rgba(58,176,122,0.5)',borderColor:'#3ab07a',borderWidth:1,borderRadius:3}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true,labels:{color:'rgba(245,240,232,0.6)',boxWidth:10,boxHeight:10,padding:12}},
+      tooltip:{callbacks:{label:c=>'$'+Math.round(c.parsed.y).toLocaleString()}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{color:'rgba(245,240,232,0.5)'}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>'$'+Math.round(v/1000)+'K',color:'rgba(245,240,232,0.5)'}}
+    }
+  }
+});
+
+// ── C3: In-house vs external margins ──
+new Chart(document.getElementById('c3').getContext('2d'), {
+  type:'bar',
+  data:{
+    labels:['Hammer wt (white)','Hammer wt (black)','Contact #4156','Contact #4157','Contact strip 8n','Casio hammer cap','Keybed cushion','Korg joystick','Nord knob','Contact (AM&S)'],
+    datasets:[{
+      label:'Margin %',
+      data:[81.1,78.5,92.4,74.8,72.6,31.9,58.1,59.1,64.7,68.6],
+      backgroundColor:d => {
+        const vals = [81.1,78.5,92.4,74.8,72.6,31.9,58.1,59.1,64.7,68.6];
+        const syntaurIdxs = [0,1,2,3,4];
+        return syntaurIdxs.includes(d.dataIndex) ? 'rgba(58,176,122,0.7)' : 'rgba(201,146,42,0.5)';
+      },
+      borderColor: d => {
+        const syntaurIdxs = [0,1,2,3,4];
+        return syntaurIdxs.includes(d.dataIndex) ? '#3ab07a' : '#c9922a';
+      },
+      borderWidth:1,borderRadius:4
+    }]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.parsed.x.toFixed(1)+'% margin'}}
+    },
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>v+'%',color:'rgba(245,240,232,0.5)'},min:0,max:100},
+      y:{grid:{display:false},ticks:{color:'rgba(245,240,232,0.6)',font:{size:10}}}
+    }
+  }
+});
+
+// ── C4: Margin scatter ──
+const scatterData = [
+  {x:81.1,y:871,label:'Hammer wt white (Syntaur)',syntaur:true},{x:92.4,y:959,label:'Contact #4156 (Syntaur)',syntaur:true},
+  {x:78.5,y:433,label:'Hammer wt black (Syntaur)',syntaur:true},{x:74.8,y:68,label:'Contact 4-note (Syntaur)',syntaur:true},
+  {x:100,y:73,label:'Contact 8-note Roland (Syntaur)',syntaur:true},{x:100,y:51,label:'Contact 8-note (Syntaur)',syntaur:true},
+  {x:31.9,y:940,label:'Casio hammer cap white',syntaur:false},{x:31.9,y:350,label:'Casio hammer cap black',syntaur:false},
+  {x:17.1,y:94,label:'Contact strip (AM&S)',syntaur:false},{x:58.1,y:192,label:'Keybed cushion (Yamaha)',syntaur:false},
+  {x:59.1,y:94,label:'Korg joystick',syntaur:false},{x:49.5,y:117,label:'Key spring (Korg)',syntaur:false},
+  {x:47.6,y:95,label:'Power cord',syntaur:false},{x:48.3,y:85,label:'Voice chip clone',syntaur:false},
+  {x:84.3,y:561,label:'Style 64T keys (Yamaha)',syntaur:false},{x:86.8,y:370,label:'Style 23U key D',syntaur:false},
+  {x:92.5,y:531,label:'Contact strip Korg (Tada)',syntaur:false},{x:90.9,y:330,label:'Contact Roland (Tada)',syntaur:false},
+  {x:69.5,y:448,label:'Contact 12-note (Yamaha)',syntaur:false},{x:61.7,y:461,label:'Key actuator (Yamaha)',syntaur:false},
+];
+new Chart(document.getElementById('c4').getContext('2d'), {
+  type:'scatter',
+  data:{datasets:[
+    {label:'Syntaur in-house',data:scatterData.filter(d=>d.syntaur).map(d=>({x:d.x,y:d.y,label:d.label})),backgroundColor:'rgba(58,176,122,0.8)',pointRadius:7,pointHoverRadius:9},
+    {label:'External supplier',data:scatterData.filter(d=>!d.syntaur).map(d=>({x:d.x,y:d.y,label:d.label})),backgroundColor:'rgba(201,146,42,0.5)',pointRadius:5,pointHoverRadius:7}
+  ]},
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true,labels:{color:'rgba(245,240,232,0.6)',boxWidth:8,boxHeight:8,padding:10}},
+      tooltip:{callbacks:{label:c=>[c.raw.label,'Qty: '+c.raw.y+' · Margin: '+c.raw.x.toFixed(1)+'%']}}
+    },
+    scales:{
+      x:{title:{display:true,text:'Margin %',color:'rgba(245,240,232,0.4)'},grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>v+'%',color:'rgba(245,240,232,0.5)'}},
+      y:{title:{display:true,text:'Annual qty sold',color:'rgba(245,240,232,0.4)'},grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'rgba(245,240,232,0.5)'}}
+    }
+  }
+});
+
+// ── C5: Waitlist donut ──
+new Chart(document.getElementById('c5').getContext('2d'), {
+  type:'doughnut',
+  data:{
+    labels:['Circuit boards','Other','Displays','End caps/panels','Knobs/controls','Button assemblies','Power supply','Keys/keybeds','Music rests'],
+    datasets:[{
+      data:[1238961,348013,290575,95069,59894,53577,44448,43314,35209],
+      backgroundColor:['#185FA5','#888780','#BA7517','#E24B4A','#1D9E75','#D4537E','#7F77DD','#5DCAA5','#EF9F27'],
+      borderWidth:0, hoverOffset:6
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    cutout:'62%',
+    plugins:{
+      legend:{
+        display:true,position:'right',
+        labels:{color:'rgba(245,240,232,0.6)',boxWidth:9,boxHeight:9,padding:8,font:{size:10}}
+      },
+      tooltip:{callbacks:{label:c=>'$'+Math.round(c.parsed).toLocaleString()+' locked'}}
+    }
+  }
+});
+
+// ── C7: Scenario bars ──
+new Chart(document.getElementById('c7').getContext('2d'), {
+  type:'bar',
+  data:{
+    labels:['2025 actual','2026 baseline','+ 20 SKUs\n(conservative)','+ 50 SKUs\n(moderate)','+ Aggressive\nin-house'],
+    datasets:[{
+      data:[97857,318000,384000,480000,608000],
+      backgroundColor:['rgba(224,90,78,0.6)','rgba(74,158,218,0.5)','rgba(58,176,122,0.5)','rgba(58,176,122,0.65)','rgba(201,146,42,0.7)'],
+      borderColor:['#e05a4e','#4a9eda','#3ab07a','#3ab07a','#c9922a'],
+      borderWidth:1, borderRadius:5
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:c=>'Net profit: $'+Math.round(c.parsed.y).toLocaleString()}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{color:'rgba(245,240,232,0.5)',maxRotation:0}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>'$'+Math.round(v/1000)+'K',color:'rgba(245,240,232,0.5)'}}
+    }
+  }
+});
+</script>
+</body>
+</html>
